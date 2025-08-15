@@ -7,9 +7,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-mongoose.connect(process.env.MONGO_URL)
-    .then(() => console.log("✅ Connected to MongoDB Atlas"))
-    .catch(err => console.error(err));
+mongoose.connect(process.env.MONGO_URL, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+
+.then(() => console.log("✅ Connected to MongoDB Atlas"))
+.catch(err => console.error("❌ MongoDB connection error:", err));
 
 const recipeSchema = new mongoose.Schema({
     title: String,
