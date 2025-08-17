@@ -72,7 +72,7 @@ const swaggerOptions = {
     apis: ["./server.js"],
 };
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
-app.use("/api-docs", swaggerUi.server, swaggerUi.setup(swaggerDocs));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 app.post("/auth/register", async (req, res) => {
     try {
