@@ -1,49 +1,43 @@
 const dotenv = require("dotenv");
 const express = require("express");
 const mongoose = require("mongoose");
-const cors = require("cors");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
 const swaggerJsDoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
-require("dotenv").config();
 
 dotenv.config();
 const app = express();
-app.use(cors());
 app.use(express.json());
 
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log("✅ Connected to MongoDB Atlas"))
-    .catch(err => console.error("❌ MongoDB connection error:", err));
+mongoose
+  .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("✅ Connected to MongoDB Atlas"))
+  .catch((err) => console.error("MongoDB error:", err));
 
-const userSchema = new mongoose.Schema({
-    username: { type: String, unique: true, required: true },
-    password: { type: String, required: true}
+
+const UserSchema = new mongoose.Schema({
+  username: String,
+  password: String,
 });
+const User = mongoose.model("User", UserSchema);
 
-const User = mongoose.model("User", userSchema);
-
-const recipeSchema = new mongoose.Schema({
-    title: String,
-    ingredients: [String],
-    instructions: String,
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
+const RecipeSchema = new mongoose.Schema({
+  title: String,
+  description: String,
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });
+const Recipe = mongoose.model("Recipe", RecipeSchema);
 
-const Recipe = mongoose.model("Recipe", recipeSchema);
-
-const authMiddleware = (req, res, next) => {
-    const token = req.headers["authorization"]?.split(" ")[1];
-    if (!token) return res.status(401).json({ message: "Access denied. No token provided." });
-
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.userId = decoded.id;
-        next();
-    } catch (err) {
-        res.status(403).json({ error: "Invalid or expired token." });
-    }
+const authenticate = (req, res, next) => {
+  const token = req.header("Authorization")?.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "Access denied" });
+  try {
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = verified;
+    next();
+  } catch {
+    res.status(400).json({ error: "Invalid token" });
+  }
 };
 
 const swaggerOptions = {
@@ -55,7 +49,7 @@ const swaggerOptions = {
             description: "A simple API with Recipe CRUD"
         },
         servers: [
-            { url: "http://localhost:3000" }, 
+            { url: "http://localhost:8080" }, 
             { url: process.env.RAILWAY_STATIC_URL || "http://localhost:3000" } // Railway
         ],
         components: {
@@ -64,8 +58,8 @@ const swaggerOptions = {
                     type: "http",
                     scheme: "bearer",
                     bearerFormat: "JWT"
-                }
-            }
+                },
+            },
         },
         security: [{ bearerAuth: [] }]
     },
@@ -73,6 +67,8 @@ const swaggerOptions = {
 };
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+
 
 app.post("/auth/register", async (req, res) => {
     try {
@@ -128,9 +124,4 @@ app.delete("/recipes/:id", authMiddleware, async (req, res) => {
     res.json({ message: "Recipe deleted!" });
 });
 
-app.get("/", (req, res) => {
-    res.send("API is running 🚀");
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(8080, () => console.log("🚀 Server running on port 8080"));
