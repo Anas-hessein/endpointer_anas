@@ -68,8 +68,8 @@ const swaggerOptions = {
     },
     apis: ["./server.js"],
 };
-const swaggerDocs = swaggerJsdoc(swaggerOptions);
-app.use("/api-docs", swaggerUi.server, swaggerUi.setup(swaggerDocs));
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 app.post("/auth/register", async (req, res) => {
     try {
@@ -87,7 +87,7 @@ app.post("/auth/login", async (req, res) => {
     if (!user) return res.status(400).json({ error: "User not found"});
 
     const isPasswordValid = await bcrypt.compare(req.body.password, user.password);
-    if (!isPasswordVaild) return res.status(401).json({ error: "Invalid password"});
+    if (!isPasswordValid) return res.status(401).json({ error: "Invalid password"});
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h"});
     res.json({ token });
@@ -117,7 +117,7 @@ app.post("/recipes", authMiddleware, async (req, res) => {
 
 app.put("/recipes/:id", authMiddleware, async (req, res) => {
     await Recipe.findByIdAndUpdate(req.params.id, req.body);
-    res.json({ meaage: "Recipe update! "});
+    res.json({ message: "Recipe updated!" });
 });
 
 app.delete("/recipes/:id", authMiddleware, async (req, res) => {
@@ -125,4 +125,5 @@ app.delete("/recipes/:id", authMiddleware, async (req, res) => {
     res.json({ message: "Recipe deleted!" });
 });
 
-app.listen(3000, () => console.log("🚀 Server running on port 3000"));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
