@@ -36,12 +36,26 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
+/**
+ * @swagger
+ * /register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Auth]
+ */
 app.post("/register", async (req, res) => {
     const { username, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
     res.json({ message: `User ${username} registered!` });
 });
 
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Login and get JWT token
+ *     tags: [Auth]
+ */
 app.post("/login", (req, res) => {
     const { username } = req.body;
     const user = { name: username };
@@ -49,31 +63,75 @@ app.post("/login", (req, res) => {
     res.json({ token });
 });
 
+/**
+ * @swagger
+ * /protected:
+ *   get:
+ *     summary: Access a protected route
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ */
 app.get("/protected", authenticateToken, (req, res) => {
     res.json({ message: "Welcome to the protected route!", user: req.user });
 });
 
+/**
+ * @swagger
+ * /recipes:
+ *   post:
+ *     summary: Add a new recipe
+ *     tags: [Recipes]
+ */
 app.post("/recipes", async (req, res) => {
     const recipe = new Recipe(req.body);
     await recipe.save();
     res.json({ message: "Recipe added!" });
 });
 
+/**
+ * @swagger
+ * /recipes:
+ *   get:
+ *     summary: Get all recipes
+ *     tags: [Recipes]
+ */
 app.get("/recipes", async (req, res) => {
     const recipes = await Recipe.find();
     res.json(recipes);
 });
 
+/**
+ * @swagger
+ * /recipes/{id}:
+ *   get:
+ *     summary: Get recipe by ID
+ *     tags: [Recipes]
+ */
 app.get("/recipes/:id", async (req, res) => {
     const recipe = await Recipe.findById(req.params.id);
     res.json(recipe);
 });
 
+/**
+ * @swagger
+ * /recipes/{id}:
+ *   put:
+ *     summary: Update recipe by ID
+ *     tags: [Recipes]
+ */
 app.put("/recipes/:id", async (req, res) => {
     await Recipe.findByIdAndUpdate(req.params.id, req.body);
     res.json({ message: "Recipe updated!" });
 });
 
+/**
+ * @swagger
+ * /recipes/{id}:
+ *   delete:
+ *     summary: Delete recipe by ID
+ *     tags: [Recipes]
+ */
 app.delete("/recipes/:id", async (req, res) => {
     await Recipe.findByIdAndDelete(req.params.id);
     res.json({ message: "Recipe deleted!" });
@@ -87,7 +145,18 @@ const swaggerOptions = {
             version: "1.0.0",
             description: "API for managing recipes with JWT authentication",
         },
-        servers: [{ url: "http://localhost:3000" }],
+        servers: [
+            { url: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000" }
+        ],
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: "http",
+                    scheme: "bearer",
+                    bearerFormat: "JWT",
+                },
+            },
+        },
     },
     apis: ["./server.js"],
 };
