@@ -1,3 +1,4 @@
+import { SpeedInsights } from "@vercel/speed-insights/next"
 const dotenv = require("dotenv");
 const express = require("express");
 const mongoose = require("mongoose");
@@ -54,7 +55,7 @@ const swaggerOptions = {
     servers: [
     { url: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000" }
     ],
-    
+
     components: {
       securitySchemes: {
         bearerAuth: {
