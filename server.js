@@ -42,6 +42,20 @@ const authenticateToken = (req, res, next) => {
  *   post:
  *     summary: Register a new user
  *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User registered successfully
  */
 app.post("/register", async (req, res) => {
     const { username, password } = req.body;
@@ -55,6 +69,9 @@ app.post("/register", async (req, res) => {
  *   post:
  *     summary: Login and get JWT token
  *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Returns a JWT token
  */
 app.post("/login", (req, res) => {
     const { username } = req.body;
@@ -71,6 +88,9 @@ app.post("/login", (req, res) => {
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Protected route accessed
  */
 app.get("/protected", authenticateToken, (req, res) => {
     res.json({ message: "Welcome to the protected route!", user: req.user });
@@ -82,6 +102,9 @@ app.get("/protected", authenticateToken, (req, res) => {
  *   post:
  *     summary: Add a new recipe
  *     tags: [Recipes]
+ *     responses:
+ *       200:
+ *         description: Recipe added successfully
  */
 app.post("/recipes", async (req, res) => {
     const recipe = new Recipe(req.body);
@@ -95,6 +118,9 @@ app.post("/recipes", async (req, res) => {
  *   get:
  *     summary: Get all recipes
  *     tags: [Recipes]
+ *     responses:
+ *       200:
+ *         description: List of all recipes
  */
 app.get("/recipes", async (req, res) => {
     const recipes = await Recipe.find();
@@ -107,6 +133,14 @@ app.get("/recipes", async (req, res) => {
  *   get:
  *     summary: Get recipe by ID
  *     tags: [Recipes]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Recipe found
  */
 app.get("/recipes/:id", async (req, res) => {
     const recipe = await Recipe.findById(req.params.id);
@@ -119,6 +153,14 @@ app.get("/recipes/:id", async (req, res) => {
  *   put:
  *     summary: Update recipe by ID
  *     tags: [Recipes]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Recipe updated
  */
 app.put("/recipes/:id", async (req, res) => {
     await Recipe.findByIdAndUpdate(req.params.id, req.body);
@@ -131,6 +173,14 @@ app.put("/recipes/:id", async (req, res) => {
  *   delete:
  *     summary: Delete recipe by ID
  *     tags: [Recipes]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Recipe deleted
  */
 app.delete("/recipes/:id", async (req, res) => {
     await Recipe.findByIdAndDelete(req.params.id);
@@ -145,20 +195,18 @@ const swaggerOptions = {
             version: "1.0.0",
             description: "API for managing recipes with JWT authentication",
         },
-        servers: [
-            { url: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000" }
-        ],
+        servers: [{ url: "http://localhost:3000" }],
         components: {
             securitySchemes: {
                 bearerAuth: {
                     type: "http",
                     scheme: "bearer",
-                    bearerFormat: "JWT",
+                    bearerFormat: "JWT",    
                 },
             },
         },
     },
-    apis: ["./server.js"],
+    apis: ["/server.js"],
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
