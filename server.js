@@ -52,9 +52,9 @@ const swaggerOptions = {
       description: "A simple API with Recipe CRUD"
     },
     servers: [
-      { url: "http://localhost:3000" },
-      { url: process.env.RAILWAY_STATIC_URL || "http://localhost:3000" }
+    { url: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000" }
     ],
+    
     components: {
       securitySchemes: {
         bearerAuth: {
